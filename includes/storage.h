@@ -202,14 +202,14 @@ public:
     return it->second;
   }
 
-  std::vector<Table>& getAllTables() {
-    std::vector<Table>* tableVec = new std::vector<Table>();
+  std::vector<Table> getAllTables() const {
+    std::vector<Table> tableVec;
 
-    for (auto& pair : tables) {
-      tableVec->push_back(pair.second);
+    for (const auto& pair : tables) {
+      tableVec.push_back(pair.second);
     }
 
-    return *tableVec;
+    return tableVec;
   }
 
 };
