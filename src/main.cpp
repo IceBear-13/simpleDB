@@ -8,7 +8,7 @@ int main() {
     std::cout << "SimpleDBMS - A minimal DBMS written in C++\n";
     std::cout << "Type 'EXIT' to quit, 'HELP' for commands\n";
     
-    Storage storage("./data");
+    Storage storage("simpledb_data");
     QueryProcessor processor(storage);
     
     std::string input;
@@ -17,6 +17,9 @@ int main() {
         std::getline(std::cin, input);
         
         if (input == "EXIT" || input == "exit") {
+            for(Table& table : storage.getAllTables()) {
+                storage.persistTable(table.getTableName());
+            }
             break;
         } else if (input == "HELP" || input == "help") {
             std::cout << "Supported commands:\n";

@@ -10,17 +10,52 @@
 #include <vector>
 #include <stdexcept>
 #include <cstring>
+#include <cstdlib>  // for getenv
 
 class Storage {
 private:
   std::string dbName;
   std::unordered_map<std::string, Table> tables;
-  std::string get_table_path(const std::string& table_name) {
-    return "~/testDB/" + dbName + "/" + table_name + ".tbl";
+  
+  std::string get_base_path() {
+    // Option 1: Use home directory
+    const char* home = getenv("HOME");
+    if (home) {
+      return std::string(home) + "/testDB/" + dbName;
+    }
+    // Option 2: Fallback to current directory
+    return "./testDB/" + dbName;
   }
+  
+  std::string get_table_path(const std::string& table_name) {
+    return get_base_path() + "/" + table_name + ".tbl";
+  }
+  
 public:
   Storage(const std::string& name) : dbName(name) {
-    std::filesystem::create_directory("~/testDB/" + dbName);
+    std::filesystem::create_directories(get_base_path());
+    loadAllTables();
+  }
+
+  void loadAllTables() {
+    std::string basePath = get_base_path();
+    if (!std::filesystem::exists(basePath)) {
+      return; // No directory exists yet
+    }
+    
+    for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
+      if (entry.is_regular_file() && entry.path().extension() == ".tbl") {
+        std::string tableName = entry.path().stem().string();
+        try {
+          loadTable(tableName);
+          std::cout << "Loaded table: " << tableName << std::endl;
+        } catch (const std::exception& e) {
+          std::cerr << "Failed to load table " << tableName << ": " << e.what() << std::endl;
+        } catch (const char* msg) {
+          std::cerr << "Failed to load table " << tableName << ": " << msg << std::endl;
+        }
+      }
+    }
   }
 
   void createTable(const std::string& tableName, const std::vector<std::string>& columns) {
@@ -36,125 +71,121 @@ public:
       throw "Table not found";
     }
 
-    std::ofstream outFile(get_table_path(tableName), std::ios::binary | std::ios::app);
+    std::ofstream outFile(get_table_path(tableName));
     if (!outFile) {
       throw "Failed to open file for writing";
     }
 
     Table& table = it->second;
     std::vector<std::string> columnNames = table.getColumnNames();
+    
+    // Write column count
     outFile << columnNames.size() << "\n";
+    
     // Write column names
     for (const std::string& colName : columnNames) {
-      size_t len = colName.size();
-      outFile.write(reinterpret_cast<const char*>(&len), sizeof(size_t));
-      outFile.write(colName.c_str(), len);
-      outFile << "\n"; // Delimiter between column names
+      outFile << colName << "\n";
     }
-
-    outFile << "\n"; // New line after column names
     
+    // Write row count
+    outFile << table.getRowCount() << "\n";
+    
+    // Write rows
     for(size_t i = 0; i < table.getRowCount(); i++) {
       const std::vector<Value>& row = table.getRow(i);
-      for (const Value& val : row) {
+      for (size_t j = 0; j < row.size(); j++) {
+        const Value& val = row[j];
         Value::Type type = val.getType();
-        outFile.write(reinterpret_cast<const char*>(&type), sizeof(Value::Type));
+        
+        // Write type identifier
+        outFile << static_cast<int>(type) << " ";
+        
+        // Write value based on type
         switch (type) {
-          case Value::INT: {
-            int intValue = val.getInt();
-            outFile.write(reinterpret_cast<const char*>(&intValue), sizeof(int));
+          case Value::INT:
+            outFile << val.getInt();
             break;
-          }
-          case Value::STRING: {
-            const char* strValue = val.getString();
-            size_t len = strlen(strValue);
-            outFile.write(reinterpret_cast<const char*>(&len), sizeof(size_t));
-            outFile.write(strValue, len);
+          case Value::STRING:
+            outFile << "\"" << val.getString() << "\"";
             break;
-          }
-          case Value::BOOL: {
-            bool boolValue = val.getBool();
-            outFile.write(reinterpret_cast<const char*>(&boolValue), sizeof(bool));
+          case Value::BOOL:
+            outFile << (val.getBool() ? "true" : "false");
             break;
-          }
           default:
             break;
         }
-        outFile << "|"; // Delimiter between values
+        
+        if (j < row.size() - 1) {
+          outFile << " ";
+        }
       }
-      outFile << "\n"; // New line for new row
+      outFile << "\n";
     }
-
     
+    outFile.close();
   }
   
   void loadTable(std::string& tableName) {
-    std::ifstream inFile(get_table_path(tableName), std::ios::binary);
+    std::ifstream inFile(get_table_path(tableName));
     if (!inFile) {
       throw "Failed to open file for reading";
     }
 
     size_t columnCount;
     inFile >> columnCount;
+    inFile.ignore(); // Skip newline
 
     std::vector<std::string> columnNames;
     for (size_t i = 0; i < columnCount; ++i) {
-      size_t len;
-      inFile.read(reinterpret_cast<char*>(&len), sizeof(size_t));
-      if (!inFile) throw std::runtime_error("Failed reading column name length");
-
       std::string colName;
-      colName.resize(len);
-      inFile.read(&colName[0], len);
-      if (!inFile) throw std::runtime_error("Failed reading column name");
-
-      columnNames.push_back(std::move(colName));
+      std::getline(inFile, colName);
+      columnNames.push_back(colName);
     }
 
-    Table table = Table(tableName, columnNames);
-    std::string line;
-    while (std::getline(inFile, line)) {
+    Table table(tableName, columnNames);
+    
+    size_t rowCount;
+    inFile >> rowCount;
+    inFile.ignore(); // Skip newline
+    
+    for (size_t i = 0; i < rowCount; i++) {
       std::vector<Value> row;
-      size_t pos = 0;
-      while (pos < line.size()) {
-        Value::Type type;
-        inFile.read(reinterpret_cast<char*>(&type), sizeof(Value::Type));
+      std::string line;
+      std::getline(inFile, line);
+      std::stringstream ss(line);
+      
+      for (size_t j = 0; j < columnCount; j++) {
+        int typeInt;
+        ss >> typeInt;
+        Value::Type type = static_cast<Value::Type>(typeInt);
+        
+        std::string valueStr;
+        ss >> valueStr;
+        
         switch (type) {
-          case Value::INT: {
-            int intValue;
-            inFile.read(reinterpret_cast<char*>(&intValue), sizeof(int));
-            row.push_back(Value(intValue));
+          case Value::INT:
+            row.push_back(Value(std::stoi(valueStr)));
             break;
-          }
-          case Value::STRING: {
-            size_t len;
-            inFile.read(reinterpret_cast<char*>(&len), sizeof(size_t));
-            char* strValue = new char[len + 1];
-            inFile.read(strValue, len);
-            strValue[len] = '\0';
-            row.push_back(Value(strValue));
-            delete[] strValue;
+          case Value::STRING:
+            // Remove quotes
+            if (valueStr.front() == '"' && valueStr.back() == '"') {
+              valueStr = valueStr.substr(1, valueStr.size() - 2);
+            }
+            row.push_back(Value(valueStr.c_str()));
             break;
-          }
-          case Value::BOOL: {
-            bool boolValue;
-            inFile.read(reinterpret_cast<char*>(&boolValue), sizeof(bool));
-            row.push_back(Value(boolValue));
+          case Value::BOOL:
+            row.push_back(Value(valueStr == "true"));
             break;
-          }
           default:
             break;
         }
-        pos = line.find("|", pos);
-        if (pos == std::string::npos) break; // No more delimiters
-        pos++; // Move past delimiter
       }
       table.insertRow(row);
     }
 
     tables[tableName] = table;
   }
-
+  
   Table& getTable(const std::string& tableName) {
     auto it = tables.find(tableName);
     if (it == tables.end()) {
@@ -169,6 +200,16 @@ public:
       throw std::out_of_range("Table not found");
     }
     return it->second;
+  }
+
+  std::vector<Table>& getAllTables() {
+    std::vector<Table>* tableVec = new std::vector<Table>();
+
+    for (auto& pair : tables) {
+      tableVec->push_back(pair.second);
+    }
+
+    return *tableVec;
   }
 
 };

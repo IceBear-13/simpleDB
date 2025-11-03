@@ -37,25 +37,38 @@ public:
         columns.push_back(col);
       }
       storage.createTable(tableName, columns);
+      std::cout << "Table " << tableName << " created with columns: ";
+      for(const auto& column : columns) {
+        std::cout << column << " ";
+      }
+      std::cout << std::endl;
     } else if(command == "INSERT") {
       std::string temp, into, tableName, valuesToken;
-      ss >> temp >> into >> tableName >> valuesToken;
+      ss >> temp >> tableName >> valuesToken;
       std::vector<Value> values;
       std::string val;
       while(ss >> val) {
-        if(val.front() == '(') {
-          val = val.substr(1);
-        }
-        if(val.back() == ')') {
-          val = val.substr(0, val.size() - 1);
-        }
+        std::cout << val << " ";
         if(val.back() == ',') {
           val.pop_back();
         }
-        values.push_back(new Value(val.c_str()));
+
+        if(val == "true" || val == "false") {
+          values.push_back(Value(val == "true"));
+        } else if(val.front() == '"' && val.back() == '"') {
+          values.push_back(Value(val.substr(1, val.size() - 2).c_str()));
+        } else {
+          try {
+            int intValue = std::stoi(val);
+            values.push_back(Value(intValue));
+          } catch(const std::invalid_argument&) {
+            std::cerr << "Invalid value: " << val << std::endl;
+          }
+        }
       }
       InsertQuery insertQuery(storage);
       insertQuery.insertInto(tableName, values);
+      std::cout << "Inserted values into " << tableName << std::endl;
     } else if(command == "SELECT") {
       std::vector<std::string> columns;
       std::string col;
@@ -114,7 +127,9 @@ public:
         }
       }
       // Where statement to be implemented later 
-    } 
+    } else {
+      std::cerr << "Unknown command: " << command << std::endl;
+    }
   } 
   
 };
