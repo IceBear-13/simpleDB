@@ -168,7 +168,7 @@ public:
             break;
           case Value::STRING:
             // Remove quotes
-            if (valueStr.front() == '"' && valueStr.back() == '"') {
+            if (valueStr.size() >= 2 && valueStr.front() == '"' && valueStr.back() == '"') {
               valueStr = valueStr.substr(1, valueStr.size() - 2);
             }
             row.emplace_back(valueStr);
