@@ -1,4 +1,4 @@
-# SimpleDBMS
+# simpleDB
 
 Minimal in-memory DBMS written in C++ (learning / prototype project).
 
