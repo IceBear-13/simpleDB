@@ -26,8 +26,8 @@ public:
     ss >> command;
     
     if(command == "CREATE") {
-      std::string temp, tableName;
-      ss >> temp >> tableName;
+      std::string tableToken, tableName;
+      ss >> tableToken >> tableName;
       std::vector<std::string> columns;
       std::string col;
       while(ss >> col) {
@@ -43,6 +43,12 @@ public:
       std::vector<Value> values;
       std::string val;
       while(ss >> val) {
+        if(val.front() == '(') {
+          val = val.substr(1);
+        }
+        if(val.back() == ')') {
+          val = val.substr(0, val.size() - 1);
+        }
         if(val.back() == ',') {
           val.pop_back();
         }
