@@ -60,7 +60,7 @@ public:
 
         if(val == "true" || val == "false") {
           values.emplace_back(val == "true");
-        } else if(val.front() == '"' && val.back() == '"') {
+        } else if(val.size() >= 2 && val.front() == '"' && val.back() == '"') {
           // Handle quoted strings
           std::string str_content = val.substr(1, val.size() - 2);
           values.emplace_back(str_content);
