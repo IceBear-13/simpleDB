@@ -43,32 +43,48 @@ public:
       }
       std::cout << std::endl;
     } else if(command == "INSERT") {
-      std::string temp, into, tableName, valuesToken;
-      ss >> temp >> tableName >> valuesToken;
+      std::string intoToken, tableName, valuesToken;
+      ss >> intoToken >> tableName >> valuesToken;
+      
+      if(intoToken != "INTO" || valuesToken != "VALUES") {
+        std::cerr << "Invalid INSERT syntax. Use: INSERT INTO tablename VALUES val1, val2, ..." << std::endl;
+        return;
+      }
+      
       std::vector<Value> values;
       std::string val;
       while(ss >> val) {
-        std::cout << val << " ";
         if(val.back() == ',') {
           val.pop_back();
         }
 
         if(val == "true" || val == "false") {
-          values.push_back(Value(val == "true"));
+          values.emplace_back(val == "true");
         } else if(val.front() == '"' && val.back() == '"') {
-          values.push_back(Value(val.substr(1, val.size() - 2).c_str()));
+          // Handle quoted strings
+          std::string str_content = val.substr(1, val.size() - 2);
+          values.emplace_back(str_content);
         } else {
           try {
             int intValue = std::stoi(val);
-            values.push_back(Value(intValue));
-          } catch(const std::invalid_argument&) {
-            std::cerr << "Invalid value: " << val << std::endl;
+            values.emplace_back(intValue);
+          } catch(...) {
+            values.emplace_back(val);
           }
         }
       }
-      InsertQuery insertQuery(storage);
-      insertQuery.insertInto(tableName, values);
-      std::cout << "Inserted values into " << tableName << std::endl;
+      
+      try {
+        InsertQuery insertQuery(storage);
+        insertQuery.insertInto(tableName, values);
+        // Also persist the table after insertion
+        storage.persistTable(tableName);
+        std::cout << "Inserted values into " << tableName << std::endl;
+      } catch(const std::exception& e) {
+        std::cerr << "Insert failed: " << e.what() << std::endl;
+      } catch(const char* msg) {
+        std::cerr << "Insert failed: " << msg << std::endl;
+      }
     } else if(command == "SELECT") {
       std::vector<std::string> columns;
       std::string col;

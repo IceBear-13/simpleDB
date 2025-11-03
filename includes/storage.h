@@ -164,17 +164,17 @@ public:
         
         switch (type) {
           case Value::INT:
-            row.push_back(Value(std::stoi(valueStr)));
+            row.emplace_back(std::stoi(valueStr));
             break;
           case Value::STRING:
             // Remove quotes
             if (valueStr.front() == '"' && valueStr.back() == '"') {
               valueStr = valueStr.substr(1, valueStr.size() - 2);
             }
-            row.push_back(Value(valueStr.c_str()));
+            row.emplace_back(valueStr);
             break;
           case Value::BOOL:
-            row.push_back(Value(valueStr == "true"));
+            row.emplace_back(valueStr == "true");
             break;
           default:
             break;

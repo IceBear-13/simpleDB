@@ -1,38 +1,86 @@
 #ifndef VALUE_H
 #define VALUE_H
 
+#include <string>
+#include <stdexcept>
 
 class Value {
 public:
   enum Type { INT, STRING, BOOL, NULL_TYPE };
 
+private:
   Type type;
   union {
     int intValue;
-    const char* stringValue;
     bool boolValue;
   };
+  std::string stringValue; // Keep string outside the union
 
+public:
   Value() : type(NULL_TYPE) {}
+  
   Value(int v) : type(INT), intValue(v) {}
+  
+  Value(const std::string& v) : type(STRING), stringValue(v) {}
+  
   Value(const char* v) : type(STRING), stringValue(v) {}
+  
   Value(bool v) : type(BOOL), boolValue(v) {}
+
+  Value(const Value& other) : type(other.type) {
+    switch (type) {
+      case INT:
+        intValue = other.intValue;
+        break;
+      case STRING:
+        stringValue = other.stringValue;
+        break;
+      case BOOL:
+        boolValue = other.boolValue;
+        break;
+      case NULL_TYPE:
+        break;
+    }
+  }
+
+  // Assignment operator
+  Value& operator=(const Value& other) {
+    if (this != &other) {
+      type = other.type;
+      switch (type) {
+        case INT:
+          intValue = other.intValue;
+          break;
+        case STRING:
+          stringValue = other.stringValue;
+          break;
+        case BOOL:
+          boolValue = other.boolValue;
+          break;
+        case NULL_TYPE:
+          break;
+      }
+    }
+    return *this;
+  }
+  
+  ~Value() = default;
 
   Type getType() const { return type; }
 
   int getInt() const {
-    if (type == INT) return intValue;
-    throw "Type mismatch: not an int";
+    if (type != INT) throw std::runtime_error("Type mismatch: not an int");
+    return intValue;
   }
 
-  const char* getString() const {
-    if (type == STRING) return stringValue;
-    throw "Type mismatch: not a string";
+  const std::string& getString() const {
+    if (type != STRING) throw std::runtime_error("Type mismatch: not a string");
+    return stringValue;
   }
 
   bool getBool() const {
-    if (type == BOOL) return boolValue;
-    throw "Type mismatch: not a bool";
+    if (type != BOOL) throw std::runtime_error("Type mismatch: not a bool");
+    return boolValue;
   }
 };
 

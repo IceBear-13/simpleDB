@@ -53,7 +53,7 @@ public:
             match = (row[columnIndex].getInt() == value.getInt());
             break;
           case Value::STRING:
-            match = (strcmp(row[columnIndex].getString(), value.getString()) == 0);
+            match = (row[columnIndex].getString() == value.getString());
             break;
           case Value::BOOL:
             match = (row[columnIndex].getBool() == value.getBool());
