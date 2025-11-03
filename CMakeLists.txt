@@ -3,11 +3,11 @@ project(SimpleDBMS)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(simpledbms
-    main.cpp
-    storage_engine.h
-    query_processor.h
-    dbms.h
+set(SRC_FILES
+    src/main.cpp
 )
 
-target_include_directories(simpledbms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable(simpledbms ${SRC_FILES})
+
+# Headers are in includes/
+target_include_directories(simpledbms PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/includes)

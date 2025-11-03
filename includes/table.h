@@ -14,6 +14,7 @@ private:
   std::vector<std::vector<Value>> rows;
 
 public:
+  Table() = default;
   Table(const std::string tableName, const std::vector<std::string>& cols) : tableName(tableName), columnNames(cols) {
     for (size_t i = 0; i < columnNames.size(); ++i) {
       columnIndexMap[columnNames[i]] = i;
