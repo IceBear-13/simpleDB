@@ -50,7 +50,7 @@ Supported commands (simple parser implemented in QueryProcessor::execute):
 - Create table:
   CREATE TABLE table_name col1 col2 col3
 - Insert row:
-  INSERT INTO table_name VALUES (1, hello, true)
+  INSERT INTO table_name VALUES 1, hello, true
 - Select:
   SELECT * FROM table_name
   SELECT col1, col3 FROM table_name
@@ -58,7 +58,7 @@ Supported commands (simple parser implemented in QueryProcessor::execute):
 Example:
 ```
 simpledb> CREATE TABLE users id name active
-simpledb> INSERT INTO users VALUES (1, Alice, true)
+simpledb> INSERT INTO users VALUES 1, Alice, true
 simpledb> SELECT * FROM users
 ```
 Columns do not enforce a fixed type: any cell may hold any Value::Type. See:
@@ -74,7 +74,6 @@ Basic binary persistence is implemented in Storage::persistTable and loading in 
 ## TODO / Ideas
 - Enforce per-column types in Table.
 - Improve parser in QueryProcessor (quoted strings, escaping, WHERE clause).
-- Add safer memory handling for strings in Value (use std::string).
 - Fix/complete CMakeLists.txt to reference correct source/header files.
 - Add unit tests.
 
