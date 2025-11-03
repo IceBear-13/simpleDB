@@ -17,7 +17,7 @@ int main() {
         std::getline(std::cin, input);
         
         if (input == "EXIT" || input == "exit") {
-            for(Table& table : storage.getAllTables()) {
+            for(const Table& table : storage.getAllTables()) {
                 storage.persistTable(table.getTableName());
             }
             break;
