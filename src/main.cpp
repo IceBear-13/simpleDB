@@ -1,4 +1,5 @@
-// main.cpp
+// simpleDB
+
 #include <iostream>
 #include "../includes/query_processor.h"
 #include "../includes/storage.h"
