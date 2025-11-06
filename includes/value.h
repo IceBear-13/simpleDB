@@ -82,6 +82,21 @@ public:
     if (type != BOOL) throw std::runtime_error("Type mismatch: not a bool");
     return boolValue;
   }
+
+  bool operator==(const Value& other) const {
+    if (type != other.type) return false;
+    switch (type) {
+      case INT:
+        return intValue == other.intValue;
+      case STRING:
+        return stringValue == other.stringValue;
+      case BOOL:
+        return boolValue == other.boolValue;
+      case NULL_TYPE:
+        return true; // Both are NULL_TYPE
+    }
+    return false; // Should never reach here
+  }
 };
 
 #endif

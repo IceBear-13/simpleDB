@@ -4,7 +4,6 @@
 #include "storage.h"
 #include "table.h"
 #include "value.h"
-#include "queries/create.h"
 #include "queries/insert.h"
 #include "queries/select.h"
 #include <iostream>
@@ -95,8 +94,52 @@ public:
         columns.push_back(col);
       }
       std::string tableName;
+      std::string whereToken;
       ss >> tableName;
+      ss >> whereToken;
       SelectQuery selectQuery(storage);
+      if(whereToken == "WHERE") {
+        std::string conditionColumn, equalsToken, conditionValueStr;
+        ss >> conditionColumn >> equalsToken >> conditionValueStr;
+        if(equalsToken != "=") {
+          std::cerr << "Invalid WHERE clause syntax. Use: WHERE column = value" << std::endl;
+          return;
+        }
+        Value conditionValue;
+        if(conditionValueStr.front() == '"' && conditionValueStr.back() == '"') {
+          conditionValue = Value(conditionValueStr.substr(1, conditionValueStr.size() - 2));
+        } else if(conditionValueStr == "true" || conditionValueStr == "false") {
+          conditionValue = Value(conditionValueStr == "true");
+        } else {
+          try {
+            conditionValue = Value(std::stoi(conditionValueStr));
+          } catch(...) {
+            conditionValue = Value(conditionValueStr);
+          }
+        }
+        auto result = selectQuery.selectWhere(tableName, columns, conditionValue, conditionColumn);
+        size_t rowCount = result[columns[0]].size();
+        for(size_t i = 0; i < rowCount; i++) {
+          for(const std::string& colName : columns) {
+            const Value& val = result[colName][i];
+            switch(val.getType()) {
+              case Value::INT:
+                std::cout << val.getInt() << " ";
+                break;
+              case Value::STRING:
+                std::cout << val.getString() << " ";
+                break;
+              case Value::BOOL:
+                std::cout << (val.getBool() ? "true" : "false") << " ";
+                break;
+              default:
+                break;
+            }
+          }
+        }
+        std::cout << std::endl;
+        return;
+      }
       if(columns.size() == 1 && columns[0] == "*") {
         const Table& table = selectQuery.selectAll(tableName);
         // Print all rows

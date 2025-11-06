@@ -6,7 +6,7 @@
 
 
 int main() {
-    std::cout << "SimpleDBMS - A minimal DBMS written in C++\n";
+    std::cout << "simpleDB - A minimal DBMS written in C++\n";
     std::cout << "Type 'EXIT' to quit, 'HELP' for commands\n";
     
     Storage storage("simpledb_data");
