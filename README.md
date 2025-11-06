@@ -73,7 +73,6 @@ Basic binary persistence is implemented in Storage::persistTable and loading in 
 
 ## TODO / Ideas
 - Enforce per-column types in Table.
-- Improve parser in QueryProcessor (quoted strings, escaping, WHERE clause).
 - Fix/complete CMakeLists.txt to reference correct source/header files.
 - Add unit tests.
 
