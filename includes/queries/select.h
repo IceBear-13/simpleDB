@@ -19,6 +19,18 @@ public:
     return table;
   }
 
+  /**
+   * Selects specific columns from a table.
+   * 
+   * @param tableName Name of the table to select from.
+   * @param columnNames Vector of column names to select.
+   * @return A map where keys are column names and values are vectors of Values for that column.
+   * @throws std::out_of_range if any specified column does not exist.
+   * 
+   * @example
+   * SelectQuery selectQuery(storage);
+   * auto result = selectQuery.selectColumns("users", {"id", "name"});
+   */
   std::unordered_map<std::string, std::vector<Value>> selectColumns(const std::string& tableName, const std::vector<std::string>& columnNames) {
     Table& table = storage.getTable(tableName);
     std::unordered_map<std::string, std::vector<Value>> result;
@@ -43,6 +55,20 @@ public:
     return result;
   }
 
+  /**
+   * Selects specific columns from a table where a condition is met.
+   * 
+   * @param tableName Name of the table to select from.
+   * @param columnNames Vector of column names to select.
+   * @param conditionValue Value to match in the condition column.
+   * @param conditionColumn Name of the column to apply the condition on.
+   * @return A map where keys are column names and values are vectors of Values for that column.
+   * @throws std::out_of_range if any specified column does not exist.
+   * 
+   * @example
+   * SelectQuery selectQuery(storage);
+   * auto result = selectQuery.selectWhere("users", {"id", "name"}, Value(30), "age");
+   */
   std::unordered_map<std::string, std::vector<Value>> selectWhere(std::string& tableName,  std::vector<std::string>& columnNames, const Value& conditionValue, const std::string& conditionColumn) {
     Table& table = storage.getTable(tableName);
     std::unordered_map<std::string, std::vector<Value>> result;
@@ -59,6 +85,16 @@ public:
       throw std::out_of_range("Condition column not found: " + conditionColumn);
     }
 
+    /**
+     * Get indices for requested columns
+     * 
+     * @return void
+     * @throws std::out_of_range if any specified column does not exist.
+     * 
+     * @example
+     * SelectQuery selectQuery(storage);
+     * auto result = selectQuery.selectWhere("users", {"id", "name"}, Value(30), "age");
+     */
     std::vector<size_t> colIndices;
     for (const std::string& colName : columnNames) {
       auto it = colIndexMap.find(colName);

@@ -43,7 +43,17 @@ public:
     }
   }
 
-  // Assignment operator
+  /**
+   * Assignment operator.
+   * 
+   * @param other The Value to assign from.
+   * @return Reference to this Value.
+   * 
+   * @example
+   * Value val1(42);
+   * Value val2;
+   * val2 = val1; // val2 now holds the same value as val1
+   */
   Value& operator=(const Value& other) {
     if (this != &other) {
       type = other.type;
@@ -68,21 +78,70 @@ public:
 
   Type getType() const { return type; }
 
+  /**
+   * Gets the integer value.
+   * 
+   * @return The integer value.
+   * @throws std::runtime_error if the Value is not of type INT.
+   * 
+   * @example
+   * Value val(42);
+   * int intValue = val.getInt(); // intValue will be 42
+   * Value strVal("hello");
+   * int invalidInt = strVal.getInt(); // Throws std::runtime_error
+   */
   int getInt() const {
     if (type != INT) throw std::runtime_error("Type mismatch: not an int");
     return intValue;
   }
 
+  /**
+   * Gets the string value.
+   * 
+   * @return The string value.
+   * @throws std::runtime_error if the Value is not of type STRING.
+   * 
+   * @example
+   * Value val("hello");
+   * std::string strValue = val.getString(); // strValue will be "hello"
+   * Value intVal(42);
+   * std::string invalidStr = intVal.getString(); // Throws std::runtime_error
+   */
   const std::string& getString() const {
     if (type != STRING) throw std::runtime_error("Type mismatch: not a string");
     return stringValue;
   }
 
+  /**
+   * Gets the boolean value.
+   * 
+   * @return The boolean value.
+   * @throws std::runtime_error if the Value is not of type BOOL.
+   * 
+   * @example
+   * Value val(true);
+   * bool boolValue = val.getBool(); // boolValue will be true
+   * Value intVal(42);
+   * bool invalidBool = intVal.getBool(); // Throws std::runtime_error
+   */
   bool getBool() const {
     if (type != BOOL) throw std::runtime_error("Type mismatch: not a bool");
     return boolValue;
   }
 
+  /**
+   * Equality operator.
+   * 
+   * @param other The Value to compare with.
+   * @return true if both Values are equal, false otherwise.
+   * 
+   * @example
+   * Value val1(42);
+   * Value val2(42);
+   * bool isEqual = (val1 == val2); // isEqual will be true
+   * Value val3("hello");
+   * bool isNotEqual = (val1 == val3); // isNotEqual will be false
+   */
   bool operator==(const Value& other) const {
     if (type != other.type) return false;
     switch (type) {

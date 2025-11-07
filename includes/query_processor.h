@@ -18,6 +18,17 @@ private:
 public:
   QueryProcessor(Storage& store) : storage(store) {}
   
+  /**
+   * Executes a simple SQL-like query.
+   * Supports CREATE TABLE, INSERT INTO, SELECT, and WHERE statements.
+   * 
+   * @param query The SQL-like query string to execute.
+   * @example
+   * QueryProcessor qp(storage);
+   * qp.execute("CREATE TABLE users id,name,age");
+   * qp.execute("INSERT INTO users VALUES 1,\"Alice\",30");
+   * qp.execute("SELECT * FROM users");
+   */
   void execute(const std::string query){
     std::stringstream ss(query);
     std::string command;
