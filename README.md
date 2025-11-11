@@ -1,6 +1,7 @@
 # simpleDB
 
 Minimal in-memory DBMS written in C++ (learning / prototype project).
+Please note that this only works for linux and if you would like to run this with your windows device, you can use WSL to do so.
 
 ## Overview
 
