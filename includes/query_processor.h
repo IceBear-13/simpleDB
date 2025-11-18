@@ -25,7 +25,7 @@ public:
    * @param query The SQL-like query string to execute.
    * @example
    * QueryProcessor qp(storage);
-   * qp.execute("CREATE TABLE users id,name,age");
+   * qp.execute("CREATE TABLE users id INT,name STRING,age INT");
    * qp.execute("INSERT INTO users VALUES 1,\"Alice\",30");
    * qp.execute("SELECT * FROM users");
    */
