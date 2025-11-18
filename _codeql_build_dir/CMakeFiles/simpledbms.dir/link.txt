@@ -1,1 +1,0 @@
-/home/runner/work/simpleDB/.codeql-scratch/dbs/cpp/working/autobuild/bin/c++ -O3 -DNDEBUG -static -Wl,--dependency-file=CMakeFiles/simpledbms.dir/link.d CMakeFiles/simpledbms.dir/src/main.cpp.o -o simpledbms
