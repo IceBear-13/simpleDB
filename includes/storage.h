@@ -12,19 +12,28 @@
 #include <cstring>
 #include <cstdlib>  // for getenv
 
+/*
+===========================================================================
+Storage Class:
+Manages multiple tables, handles persistence to disk, and provides methods
+to create, load, and retrieve tables.
+
+Storage class acts as an in memory/temporary database management system (DBMS) that allows
+creating, storing, retrieving, and persisting tables. It uses the filesystem to
+save and load table data, ensuring data durability across program executions.
+===========================================================================
+*/
 class Storage {
 private:
   std::string dbName;
   std::unordered_map<std::string, Table> tables;
   
   std::string get_base_path() {
-    // Option 1: Use home directory
     const char* home = getenv("HOME");
     if (home) {
-      return std::string(home) + "/testDB/" + dbName;
+      return std::string(home) + "/simpledb/" + dbName;
     }
-    // Option 2: Fallback to current directory
-    return "./testDB/" + dbName;
+    return "./simpledb/" + dbName;
   }
   
   std::string get_table_path(const std::string& table_name) {
@@ -32,15 +41,32 @@ private:
   }
   
 public:
+  /**
+   * Constructor that initializes the Storage with a database name.
+   * Creates the necessary directory structure and loads existing tables from disk.
+   * 
+   * @param name Name of the database.
+   * @example
+   * Storage storage("myDatabase");
+   */
   Storage(const std::string& name) : dbName(name) {
     std::filesystem::create_directories(get_base_path());
     loadAllTables();
   }
 
+  /**
+   * Loads all tables from disk into memory.
+   * Skips files that cannot be loaded and logs errors.
+   * 
+   * 
+   * @example
+   * Storage storage("myDatabase");
+   * storage.loadAllTables();
+   */
   void loadAllTables() {
     std::string basePath = get_base_path();
     if (!std::filesystem::exists(basePath)) {
-      return; // No directory exists yet
+      return; 
     }
     
     for (const auto& entry : std::filesystem::directory_iterator(basePath)) {
@@ -58,22 +84,35 @@ public:
     }
   }
 
-  void createTable(const std::string& tableName, const std::vector<std::string>& columns) {
+  /**
+   * Creates a new table with the given name and columns.
+   * Throws an exception if the table already exists.
+   * 
+   * @param tableName Name of the table to create.
+   * @param columns Vector of column names for the new table.
+   * @param columnTypes Vector of column types for the new table.
+   * @throws const char* if the table already exists.
+   * 
+   * @example
+   * Storage storage("myDatabase");
+   * storage.createTable("users", {"id", "name", "email"});
+   */
+  void createTable(const std::string& tableName, const std::vector<std::string>& columns, const std::vector<Value::Type>& columnTypes) {
     if (tables.find(tableName) != tables.end()) {
-      throw "Table already exists";
+      throw std::invalid_argument("Table already exists");
     }
-    tables[tableName] = Table(tableName, columns);
+    tables[tableName] = Table(tableName, columns, columnTypes);
   }
 
   void persistTable(const std::string& tableName) {
     auto it = tables.find(tableName);
     if (it == tables.end()) {
-      throw "Table not found";
+      throw std::invalid_argument("Table not found");
     }
 
     std::ofstream outFile(get_table_path(tableName));
     if (!outFile) {
-      throw "Failed to open file for writing";
+      throw std::runtime_error("Failed to open file for writing");
     }
 
     Table& table = it->second;
@@ -85,6 +124,10 @@ public:
     // Write column names
     for (const std::string& colName : columnNames) {
       outFile << colName << "\n";
+    }
+
+    for (const Value::Type& type : table.getColumnTypes()) {
+      outFile << Value::typeToString(type) << "\n";
     }
     
     // Write row count
@@ -125,10 +168,21 @@ public:
     outFile.close();
   }
   
+  /**
+   * Loads a table from disk into memory.
+   * Throws an exception if the table file cannot be read or is malformed.
+   * 
+   * @param tableName Name of the table to load.
+   * @throws const char* if file operations fail or data is malformed.
+   * 
+   * @example
+   * Storage storage("myDatabase");
+   * storage.loadTable("users");
+   */
   void loadTable(std::string& tableName) {
     std::ifstream inFile(get_table_path(tableName));
     if (!inFile) {
-      throw "Failed to open file for reading";
+      throw std::runtime_error("Failed to open file for reading");
     }
 
     size_t columnCount;
@@ -142,7 +196,14 @@ public:
       columnNames.push_back(colName);
     }
 
-    Table table(tableName, columnNames);
+    std::vector<Value::Type> columnTypes;
+    for (size_t i = 0; i < columnCount; ++i) {
+      std::string typeStr;
+      std::getline(inFile, typeStr);
+      columnTypes.push_back(Value::stringToType(typeStr));
+    }
+
+    Table table(tableName, columnNames, columnTypes);
     
     size_t rowCount;
     inFile >> rowCount;
@@ -186,6 +247,18 @@ public:
     tables[tableName] = table;
   }
   
+  /**
+   * Retrieves a reference to a table by name.
+   * Throws an exception if the table does not exist.
+   * 
+   * @param tableName Name of the table to retrieve.
+   * @return Reference to the requested Table.
+   * @throws std::out_of_range if the table is not found.
+   * 
+   * @example
+   * Storage storage("myDatabase");
+   * Table& usersTable = storage.getTable("users");
+   */
   Table& getTable(const std::string& tableName) {
     auto it = tables.find(tableName);
     if (it == tables.end()) {
@@ -194,6 +267,18 @@ public:
     return it->second;
   }
 
+  /**
+   * getTable method but returns the const version of the table.
+   * Used when the table cannot be modified.
+   * 
+   * @param tableName Name of the table to retrieve.
+   * @return Const reference to the requested Table.
+   * @throws std::out_of_range if the table is not found.
+   * 
+   * @example
+   * Storage storage("myDatabase");
+   * const Table& usersTable = storage.getTableConst("users");
+   */
   const Table& getTableConst(const std::string& tableName) const {
     auto it = tables.find(tableName);
     if (it == tables.end()) {
@@ -202,6 +287,14 @@ public:
     return it->second;
   }
 
+  /**
+   * Returns a vector of all tables in the storage.
+   * 
+   * @return Vector of all Table objects.
+   * @example
+   * Storage storage("myDatabase");
+   * std::vector<Table> allTables = storage.getAllTables();
+   */
   std::vector<Table> getAllTables() const {
     std::vector<Table> tableVec;
 
