@@ -10,12 +10,17 @@ class Table {
 private:
   std::string tableName;
   std::vector<std::string> columnNames;
+  std::vector<Value::Type> columnTypes;
   std::unordered_map<std::string, size_t> columnIndexMap;
   std::vector<std::vector<Value>> rows;
 
 public:
   Table() = default;
-  Table(const std::string tableName, const std::vector<std::string>& cols) : tableName(tableName), columnNames(cols) {
+  Table(const std::string tableName, const std::vector<std::string>& cols, const std::vector<Value::Type>& types) : tableName(tableName), columnNames(cols), columnTypes(types) {
+    if(columnTypes.size() != columnNames.size()) {
+      throw "Column names and types size mismatch";
+    }
+
     for (size_t i = 0; i < columnNames.size(); ++i) {
       columnIndexMap[columnNames[i]] = i;
     }
@@ -49,6 +54,14 @@ public:
     if (vals.size() != columnNames.size()) {
       throw "Column count mismatch";
     }
+
+    for (size_t i = 0; i < vals.size(); ++i) {
+      bool colTypeMatch = Value::isValidType(vals[i], columnTypes[i]);
+      if (!colTypeMatch) {
+        throw "Type mismatch for column";
+      }
+    }
+
     rows.push_back(vals);
   }
 
@@ -136,10 +149,18 @@ public:
     if (rowIndex >= rows.size()) {
       throw "Row index out of bounds";
     }
+
     auto it = columnIndexMap.find(colName);
+
     if (it == columnIndexMap.end()) {
       throw "Column not found";
     }
+
+    bool colTypeMatch = Value::isValidType(val, columnTypes[it->second]);
+    if (!colTypeMatch) {
+      throw "Type mismatch for column";
+    }
+
     rows[rowIndex][it->second] = val;
   }
 
@@ -177,15 +198,48 @@ public:
    * Table table("users", {"id", "name"});
    * table.addColumn("age", Value(0));
    */
-  void addColumn(const std::string& colName, const Value& defaultValue) {
+  void addColumn(const std::string& colName, const Value& defaultValue, Value::Type type) {
     if (columnIndexMap.find(colName) != columnIndexMap.end()) {
       throw "Column already exists";
     }
+
+    if (!Value::isValidType(defaultValue, type)) {
+      throw "Default value type does not match column type";
+    }
+
     columnNames.push_back(colName);
+    columnTypes.push_back(type);
     columnIndexMap[colName] = columnNames.size() - 1;
     for (auto& row : rows) {
       row.push_back(defaultValue);
     }
+  }
+
+    /**
+   * Gets the type of a specific column.
+   * 
+   * @param colName Name of the column.
+   * @return Type of the column.
+   * @throws const char* if the column is not found.
+   * 
+   * @example
+   * Value::Type type = table.getColumnType("age");
+   */
+  Value::Type getColumnType(const std::string& colName) const {
+    auto it = columnIndexMap.find(colName);
+    if (it == columnIndexMap.end()) {
+      throw "Column not found";
+    }
+    return columnTypes[it->second];
+  }
+
+  /**
+  * Gets all column types.
+  * 
+  * @return Vector of column types.
+  */
+  const std::vector<Value::Type>& getColumnTypes() const {
+    return columnTypes;
   }
 
 };

@@ -39,14 +39,16 @@ public:
       std::string tableToken, tableName;
       ss >> tableToken >> tableName;
       std::vector<std::string> columns;
-      std::string col;
-      while(ss >> col) {
-        if(col.back() == ',') {
-          col.pop_back();
+      std::vector<Value::Type> columnTypes;
+      std::string col, type;
+      while(ss >> col >> type) {
+        if(type.back() == ',') {
+          type.pop_back();
         }
         columns.push_back(col);
+        columnTypes.push_back(Value::stringToType(type));
       }
-      storage.createTable(tableName, columns);
+      storage.createTable(tableName, columns, columnTypes);
       std::cout << "Table " << tableName << " created with columns: ";
       for(const auto& column : columns) {
         std::cout << column << " ";

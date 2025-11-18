@@ -156,6 +156,67 @@ public:
     }
     return false; // Should never reach here
   }
+
+  /**
+   * Checks if the Value matches the expected type.
+   * 
+   * @param val The Value to check.
+   * @param expectedType The expected Type.
+   * @return true if the Value's type matches the expected type, false otherwise.
+   * 
+   * @example
+   * Value val(42);
+   * bool isInt = Value::isValidType(val, Value::INT); // isInt will be true
+   * bool isString = Value::isValidType(val, Value::STRING); // isString will be false
+   */
+  static bool isValidType(const Value& val, Type expectedType) {
+    return val.getType() == expectedType;
+  }
+
+  /**
+   * Returns the Type enum corresponding to a string representation.
+   * 
+   * @param typeStr The string representation of the type.
+   * @return The corresponding Type enum.
+   * @throws std::invalid_argument if the string does not match any known type.
+   * 
+   * @example
+   * Value::Type intType = Value::stringToType("INT"); // intType
+   * Value::Type strType = Value::stringToType("STRING"); // strType
+   * Value::Type boolType = Value::stringToType("BOOL"); // boolType
+   */
+  static Type stringToType(const std::string& typeStr) {
+    if (typeStr == "INT" || typeStr == "int" || typeStr == "Int") return INT;
+    if (typeStr == "STRING" || typeStr == "string" || typeStr == "String") return STRING;
+    if (typeStr == "BOOL" || typeStr == "bool" || typeStr == "Bool") return BOOL;
+    throw std::invalid_argument("Unknown type string: " + typeStr);
+  }
+
+  /**
+   * Returns the string representation of the Type enum.
+   * 
+   * @param type The Type enum.
+   * @return The string representation of the type.
+   * 
+   * @example
+   * std::string intTypeStr = Value::typeToString(Value::INT); // intTypeStr will be "INT"
+   * std::string strTypeStr = Value::typeToString(Value::STRING);
+   * std::string boolTypeStr = Value::typeToString(Value::BOOL);
+   */
+  static std::string typeToString(Type type) {
+    switch (type) {
+      case INT:
+        return "INT";
+      case STRING:
+        return "STRING";
+      case BOOL:
+        return "BOOL";
+      case NULL_TYPE:
+        return "NULL";
+      default:
+        return "UNKNOWN";
+    }
+  }
 };
 
 #endif

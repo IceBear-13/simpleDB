@@ -97,11 +97,11 @@ public:
    * Storage storage("myDatabase");
    * storage.createTable("users", {"id", "name", "email"});
    */
-  void createTable(const std::string& tableName, const std::vector<std::string>& columns) {
+  void createTable(const std::string& tableName, const std::vector<std::string>& columns, const std::vector<Value::Type>& columnTypes) {
     if (tables.find(tableName) != tables.end()) {
       throw "Table already exists";
     }
-    tables[tableName] = Table(tableName, columns);
+    tables[tableName] = Table(tableName, columns, columnTypes);
   }
 
   void persistTable(const std::string& tableName) {
@@ -124,6 +124,10 @@ public:
     // Write column names
     for (const std::string& colName : columnNames) {
       outFile << colName << "\n";
+    }
+
+    for (const Value::Type& type : table.getColumnTypes()) {
+      outFile << Value::typeToString(type) << "\n";
     }
     
     // Write row count
@@ -192,7 +196,14 @@ public:
       columnNames.push_back(colName);
     }
 
-    Table table(tableName, columnNames);
+    std::vector<Value::Type> columnTypes;
+    for (size_t i = 0; i < columnCount; ++i) {
+      std::string typeStr;
+      std::getline(inFile, typeStr);
+      columnTypes.push_back(Value::stringToType(typeStr));
+    }
+
+    Table table(tableName, columnNames, columnTypes);
     
     size_t rowCount;
     inFile >> rowCount;
