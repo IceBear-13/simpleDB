@@ -58,7 +58,6 @@ public:
    * Loads all tables from disk into memory.
    * Skips files that cannot be loaded and logs errors.
    * 
-   * @return void
    * 
    * @example
    * Storage storage("myDatabase");
@@ -91,6 +90,7 @@ public:
    * 
    * @param tableName Name of the table to create.
    * @param columns Vector of column names for the new table.
+   * @param columnTypes Vector of column types for the new table.
    * @throws const char* if the table already exists.
    * 
    * @example
@@ -99,7 +99,7 @@ public:
    */
   void createTable(const std::string& tableName, const std::vector<std::string>& columns, const std::vector<Value::Type>& columnTypes) {
     if (tables.find(tableName) != tables.end()) {
-      throw "Table already exists";
+      throw std::invalid_argument("Table already exists");
     }
     tables[tableName] = Table(tableName, columns, columnTypes);
   }
@@ -107,12 +107,12 @@ public:
   void persistTable(const std::string& tableName) {
     auto it = tables.find(tableName);
     if (it == tables.end()) {
-      throw "Table not found";
+      throw std::invalid_argument("Table not found");
     }
 
     std::ofstream outFile(get_table_path(tableName));
     if (!outFile) {
-      throw "Failed to open file for writing";
+      throw std::runtime_error("Failed to open file for writing");
     }
 
     Table& table = it->second;
@@ -182,7 +182,7 @@ public:
   void loadTable(std::string& tableName) {
     std::ifstream inFile(get_table_path(tableName));
     if (!inFile) {
-      throw "Failed to open file for reading";
+      throw std::runtime_error("Failed to open file for reading");
     }
 
     size_t columnCount;

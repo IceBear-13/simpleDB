@@ -88,7 +88,6 @@ public:
     /**
      * Get indices for requested columns
      * 
-     * @return void
      * @throws std::out_of_range if any specified column does not exist.
      * 
      * @example

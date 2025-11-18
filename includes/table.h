@@ -18,7 +18,7 @@ public:
   Table() = default;
   Table(const std::string tableName, const std::vector<std::string>& cols, const std::vector<Value::Type>& types) : tableName(tableName), columnNames(cols), columnTypes(types) {
     if(columnTypes.size() != columnNames.size()) {
-      throw "Column names and types size mismatch";
+      throw std::invalid_argument("Column names and types size mismatch");
     }
 
     for (size_t i = 0; i < columnNames.size(); ++i) {
@@ -52,13 +52,12 @@ public:
    */
   void insertRow(const std::vector<Value>& vals) {
     if (vals.size() != columnNames.size()) {
-      throw "Column count mismatch";
+      throw std::invalid_argument("Column count mismatch");
     }
 
     for (size_t i = 0; i < vals.size(); ++i) {
-      bool colTypeMatch = Value::isValidType(vals[i], columnTypes[i]);
-      if (!colTypeMatch) {
-        throw "Type mismatch for column";
+      if (!Value::isValidType(vals[i], columnTypes[i])) {
+        throw std::invalid_argument("Type mismatch for column");
       }
     }
 
@@ -78,7 +77,7 @@ public:
    */
   const std::vector<Value>& getRow(size_t index) const {
     if (index >= rows.size()) {
-      throw "Row index out of bounds";
+      throw std::out_of_range("Row index out of bounds");
     }
     return rows[index];
   }
@@ -123,11 +122,11 @@ public:
    */
   const Value getValue(size_t rowIndex, const std::string& colName) const {
     if (rowIndex >= rows.size()) {
-      throw "Row index out of bounds";
+      throw std::out_of_range("Row index out of bounds");
     }
     auto it = columnIndexMap.find(colName);
     if (it == columnIndexMap.end()) {
-      throw "Column not found";
+      throw std::invalid_argument("Column not found");
     }
 
     return rows[rowIndex][it->second];
@@ -147,18 +146,17 @@ public:
    */
   void setValue(size_t rowIndex, const std::string& colName, const Value& val) {
     if (rowIndex >= rows.size()) {
-      throw "Row index out of bounds";
+      throw std::out_of_range("Row index out of bounds");
     }
 
     auto it = columnIndexMap.find(colName);
 
     if (it == columnIndexMap.end()) {
-      throw "Column not found";
+      throw std::invalid_argument("Column not found");
     }
 
-    bool colTypeMatch = Value::isValidType(val, columnTypes[it->second]);
-    if (!colTypeMatch) {
-      throw "Type mismatch for column";
+    if (!Value::isValidType(val, columnTypes[it->second])) {
+      throw std::invalid_argument("Type mismatch for column");
     }
 
     rows[rowIndex][it->second] = val;
@@ -200,11 +198,11 @@ public:
    */
   void addColumn(const std::string& colName, const Value& defaultValue, Value::Type type) {
     if (columnIndexMap.find(colName) != columnIndexMap.end()) {
-      throw "Column already exists";
+      throw std::invalid_argument("Column already exists");
     }
 
     if (!Value::isValidType(defaultValue, type)) {
-      throw "Default value type does not match column type";
+      throw std::invalid_argument("Default value type does not match column type");
     }
 
     columnNames.push_back(colName);
@@ -228,7 +226,7 @@ public:
   Value::Type getColumnType(const std::string& colName) const {
     auto it = columnIndexMap.find(colName);
     if (it == columnIndexMap.end()) {
-      throw "Column not found";
+      throw std::invalid_argument("Column not found");
     }
     return columnTypes[it->second];
   }
