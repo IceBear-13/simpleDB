@@ -5,7 +5,7 @@ Minimal in-memory DBMS written in C++ (learning / prototype project). <br>
 
 ## Overview
 
-SimpleDBMS stores tables of rows composed of generic `Value`s. It provides a tiny SQL-like REPL with basic `CREATE`, `INSERT`, and `SELECT` support.
+simpleDB stores tables of rows composed of generic `Value`s. It provides a tiny SQL-like REPL with basic `CREATE`, `INSERT`, and `SELECT` support.
 
 Key components:
 - [`Value`](includes/value.h) — value container and [`Value::Type`](includes/value.h).  
