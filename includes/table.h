@@ -33,7 +33,7 @@ public:
    * @return Vector of column names.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * std::vector<std::string> cols = table.getColumnNames();
    */
   std::vector<std::string> getColumnNames() const {
@@ -47,7 +47,7 @@ public:
    * @throws const char* if the number of values does not match the number of columns.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * table.insertRow({Value(1), Value("Alice"), Value(30)});
    */
   void insertRow(const std::vector<Value>& vals) {
@@ -72,7 +72,7 @@ public:
    * @throws const char* if the index is out of bounds.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * const std::vector<Value>& row = table.getRow(0);
    */
   const std::vector<Value>& getRow(size_t index) const {
@@ -87,7 +87,7 @@ public:
    * 
    * @return Const reference to the table name.
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * std::string name = table.getTableName();
    */
   const std::string& getTableName() const {
@@ -100,7 +100,7 @@ public:
    * 
    * @return Const reference to the column index map.
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * const std::unordered_map<std::string, size_t>& colMap = table.getColumnIndexMap();
    */
   const std::unordered_map<std::string, size_t>& getColumnIndexMap() const {
@@ -117,7 +117,7 @@ public:
    * @throws const char* if the row index is out of bounds or the column is not found.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * Value val = table.getValue(0, "name");
    */
   const Value getValue(size_t rowIndex, const std::string& colName) const {
@@ -141,7 +141,7 @@ public:
    * @throws const char* if the row index is out of bounds or the column is not found.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * table.setValue(0, "age", Value(31));
    */
   void setValue(size_t rowIndex, const std::string& colName, const Value& val) {
@@ -167,7 +167,7 @@ public:
    * 
    * @return Number of rows.
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * size_t rowCount = table.getRowCount();
    */
   size_t getRowCount() const {
@@ -178,7 +178,7 @@ public:
    * Clears all rows from the table.
    * 
    * @example
-   * Table table("users", {"id", "name", "age"});
+   * Table table("users", {"id", "name", "age"}, {Value::INT, Value::STRING, Value::INT});
    * table.clearRows();
    */
   void clearRows() {
@@ -193,8 +193,8 @@ public:
    * @throws const char* if the column already exists.
    * 
    * @example
-   * Table table("users", {"id", "name"});
-   * table.addColumn("age", Value(0));
+   * Table table("users", {"id", "name"}, {Value::INT, Value::STRING});
+   * table.addColumn("age", Value(0), Value::INT);
    */
   void addColumn(const std::string& colName, const Value& defaultValue, Value::Type type) {
     if (columnIndexMap.find(colName) != columnIndexMap.end()) {
