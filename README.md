@@ -73,9 +73,10 @@ If you want per-column typing, add a std::vector<Value::Type> to Table and valid
 Basic binary persistence is implemented in Storage::persistTable and loading in Storage::loadTable. Review and test file formats before relying on them.
 
 ## TODO / Ideas
-- Enforce per-column types in Table.
 - Fix/complete CMakeLists.txt to reference correct source/header files.
 - Add unit tests.
+- Join statement
+- Reformat the output
 
 ## References (source files)
 - includes/value.h — Value, Value::Type
