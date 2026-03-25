@@ -4,6 +4,9 @@
 #include "../storage.h"
 #include "../table.h"
 #include "../value.h"
+#include "../indexing/index_manager.h"
+#include "../indexing/btree.h"
+
 
 class InsertQuery {
 private:

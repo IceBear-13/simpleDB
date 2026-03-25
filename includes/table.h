@@ -2,9 +2,13 @@
 #define TABLE_H
 
 #include "value.h"
+#include "indexing/index_manager.h"
+#include "indexing/btree.h"
 #include <vector>
 #include <string>
 #include <unordered_map>
+// #include "row.h"
+// #include "column.h"
 
 class Table {
 private:
@@ -13,10 +17,30 @@ private:
   std::vector<Value::Type> columnTypes;
   std::unordered_map<std::string, size_t> columnIndexMap;
   std::vector<std::vector<Value>> rows;
+  std::unique_ptr<IndexManager> indexManager; 
+
+  void initializeIndexes() {
+    indexManager = std::make_unique<IndexManager>();
+    for (size_t i = 0; i < columnNames.size(); ++i) {
+      indexManager->createIndex(columnNames[i], columnTypes[i]);
+    }
+  }
+
+  void rebuildIndexes() {
+    if (!indexManager) {
+      initializeIndexes();
+    }
+
+    for (size_t rowIdx = 0; rowIdx < rows.size(); ++rowIdx) {
+      for (size_t colIdx = 0; colIdx < columnNames.size(); ++colIdx) {
+        indexManager->insertIntoIndex(columnNames[colIdx], rows[rowIdx][colIdx], rowIdx);
+      }
+    }
+  }
 
 public:
-  Table() = default;
-  Table(const std::string tableName, const std::vector<std::string>& cols, const std::vector<Value::Type>& types) : tableName(tableName), columnNames(cols), columnTypes(types) {
+  Table() : indexManager(std::make_unique<IndexManager>()) {}
+  Table(const std::string tableName, const std::vector<std::string>& cols, const std::vector<Value::Type>& types) : tableName(tableName), columnNames(cols), columnTypes(types){
     if(columnTypes.size() != columnNames.size()) {
       throw std::invalid_argument("Column names and types size mismatch");
     }
@@ -24,7 +48,21 @@ public:
     for (size_t i = 0; i < columnNames.size(); ++i) {
       columnIndexMap[columnNames[i]] = i;
     }
+
+    initializeIndexes();
   }
+
+  Table(const Table& other)
+      : tableName(other.tableName),
+        columnNames(other.columnNames),
+        columnTypes(other.columnTypes),
+        columnIndexMap(other.columnIndexMap),
+        rows(other.rows) {
+    initializeIndexes();
+    rebuildIndexes();
+  }
+
+  Table(Table&& other) noexcept = default;
 
   /**
    * Returns the names of all columns in the table.
@@ -62,6 +100,10 @@ public:
     }
 
     rows.push_back(vals);
+    size_t rowIndex = rows.size() - 1;
+    for (size_t i = 0; i < vals.size(); ++i) {
+      indexManager->insertIntoIndex(columnNames[i], vals[i], rowIndex);
+    }
   }
 
   /**
@@ -183,6 +225,7 @@ public:
    */
   void clearRows() {
     rows.clear();
+    initializeIndexes();
   }
 
   /**
@@ -211,6 +254,9 @@ public:
     for (auto& row : rows) {
       row.push_back(defaultValue);
     }
+
+    initializeIndexes();
+    rebuildIndexes();
   }
 
     /**
@@ -239,6 +285,35 @@ public:
   const std::vector<Value::Type>& getColumnTypes() const {
     return columnTypes;
   }
+
+  bool hasIndexForColumn(const std::string& colName) const {
+    if (!indexManager) {
+      return false;
+    }
+    return indexManager->hasIndex(colName);
+  }
+
+  std::vector<size_t> searchRowsByIndexedValue(const std::string& colName, const Value& value) {
+    if (!indexManager || !indexManager->hasIndex(colName)) {
+      return {};
+    }
+    return indexManager->searchIndex(colName, value);
+  }
+
+  Table& operator=(const Table& other) {
+    if (this != &other) {
+      tableName = other.tableName;
+      columnNames = other.columnNames;
+      columnTypes = other.columnTypes;
+      columnIndexMap = other.columnIndexMap;
+      rows = other.rows;
+      initializeIndexes();
+      rebuildIndexes();
+    }
+    return *this;
+  }
+
+  Table& operator=(Table&& other) noexcept = default;
 
 };
 
