@@ -104,8 +104,19 @@ public:
       result[colName] = std::vector<Value>();
     }
 
-    for (size_t i = 0; i < table.getRowCount(); ++i) {
-      const std::vector<Value>& row = table.getRow(i);
+    std::vector<size_t> candidateRows;
+    if (table.hasIndexForColumn(conditionColumn)) {
+      candidateRows = table.searchRowsByIndexedValue(conditionColumn, conditionValue);
+    } else {
+      candidateRows.reserve(table.getRowCount());
+      for (size_t i = 0; i < table.getRowCount(); ++i) {
+        candidateRows.push_back(i);
+      }
+    }
+
+    for (size_t rowIndex : candidateRows) {
+      const std::vector<Value>& row = table.getRow(rowIndex);
+      // Keep this safety check for fallback scans and defensive correctness.
       if (row[conditionColIndex] == conditionValue) {
         for (size_t j = 0; j < colIndices.size(); ++j) {
           result[columnNames[j]].push_back(row[colIndices[j]]);
